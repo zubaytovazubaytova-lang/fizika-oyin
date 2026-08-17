@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fizika Kiber-Quiz O'yini</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a1c29, #10121a); color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; padding: 20px; }
+        .quiz-container { background: #24293e; width: 100%; max-width: 650px; border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #3b4261; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #333a56; padding-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .timer { background: #e06c75; padding: 6px 14px; border-radius: 20px; font-weight: bold; }
+        .score { background: #98c379; color: #1e1e1e; padding: 6px 14px; border-radius: 20px; font-weight: bold; }
+        .question { font-size: 1.25rem; font-weight: 600; margin-bottom: 25px; line-height: 1.5; color: #e5e9f0; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media(max-width: 500px) { .options-grid { grid-template-columns: 1fr; } }
+        .btn-option { background: #2e344e; color: #fff; border: 2px solid #414868; padding: 15px; border-radius: 10px; font-size: 1rem; cursor: pointer; text-align: left; transition: all 0.2s; }
+        .btn-option:hover { background: #3d4566; border-color: #61afef; transform: translateY(-2px); }
+        .btn-option.correct { background: #2e7d32 !important; border-color: #4caf50 !important; }
+        .btn-option.wrong { background: #c62828 !important; border-color: #e53935 !important; }
+        .explanation { margin-top: 15px; padding: 12px; background: #1f2335; border-left: 4px solid #61afef; border-radius: 4px; display: none; }
+        .next-btn { width: 100%; margin-top: 20px; padding: 14px; background: #61afef; color: #1e1e1e; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: none; }
+        .next-btn:hover { background: #5294e2; }
+        .result-screen { text-align: center; display: none; }
+        .restart-btn { background: #98c379; color: #1e1e1e; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 15px; }
+
+        /* --- Savol qo'shish paneli --- */
+        .add-q-toggle { background: #333a56; color: #c9d1e0; border: 1px solid #414868; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; }
+        .add-q-toggle:hover { background: #3d4566; }
+        .add-q-panel { display: none; background: #1c2033; border: 1px solid #3b4261; border-radius: 10px; padding: 18px; margin-bottom: 22px; }
+        .add-q-panel.open { display: block; }
+        .add-q-panel label { display: block; font-size: 0.78rem; color: #8b93b0; margin: 10px 0 4px; text-transform: uppercase; letter-spacing: .03em; }
+        .add-q-panel input[type=text], .add-q-panel textarea {
+            width: 100%; background: #2e344e; border: 1px solid #414868; color: #fff;
+            padding: 9px 11px; border-radius: 6px; font-size: 0.92rem; outline: none;
+        }
+        .add-q-panel textarea { resize: vertical; min-height: 50px; }
+        .add-q-panel input[type=text]:focus, .add-q-panel textarea:focus { border-color: #61afef; }
+        .opt-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+        .opt-row input[type=radio] { accent-color: #98c379; width: 16px; height: 16px; flex-shrink: 0; }
+        .opt-row input[type=text] { flex: 1; margin: 0; }
+        .add-q-actions { display: flex; gap: 10px; margin-top: 16px; }
+        .add-q-save { flex: 1; background: #98c379; color: #1e1e1e; border: none; padding: 11px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .add-q-cancel { flex: 0 0 auto; background: transparent; color: #8b93b0; border: 1px solid #414868; padding: 11px 16px; border-radius: 8px; cursor: pointer; }
+        .add-q-msg { font-size: 0.85rem; color: #98c379; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div class="header">
+        <span id="question-count" style="color: #abb2bf;">Savol: 1/10</span>
+        <button class="add-q-toggle" onclick="toggleAddPanel()">➕ Savol qo'shish</button>
+        <div class="timer">Vaqt: <span id="time-left">30</span>s</div>
+        <div class="score">Ball: <span id="current-score">0</span></div>
+    </div>
+
+    <div class="add-q-panel" id="add-q-panel">
+        <label>Savol matni</label>
+        <input type="text" id="new-q-text" placeholder="Masalan: Yorug'lik tezligi qanchaga teng?">
+
+        <label>Variantlar (to'g'risini belgilang)</label>
+        <div class="opt-row"><input type="radio" name="new-q-correct" value="0" checked><input type="text" id="new-q-opt-0" placeholder="A variant"></div>
+        <div class="opt-row"><input type="radio" name="new-q-correct" value="1"><input type="text" id="new-q-opt-1" placeholder="B variant"></div>
+        <div class="opt-row"><input type="radio" name="new-q-correct" value="2"><input type="text" id="new-q-opt-2" placeholder="C variant"></div>
+        <div class="opt-row"><input type="radio" name="new-q-correct" value="3"><input type="text" id="new-q-opt-3" placeholder="D variant"></div>
+
+        <label>Tushuntirish (ixtiyoriy)</label>
+        <textarea id="new-q-exp" placeholder="To'g'ri javob nega to'g'ri ekanini qisqacha yozing..."></textarea>
+
+        <div class="add-q-actions">
+            <button class="add-q-save" onclick="addNewQuestion()">Savolni saqlash</button>
+            <button class="add-q-cancel" onclick="toggleAddPanel()">Yopish</button>
+        </div>
+        <div class="add-q-msg" id="add-q-msg">✅ Savol qo'shildi! Jami savollar soni yangilandi.</div>
+    </div>
+
+    <div id="quiz-box">
+        <div class="question" id="question-text">Savol matni</div>
+        <div class="options-grid" id="options-box"></div>
+        <div class="explanation" id="explanation-text"></div>
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">Keyingi savol ➔</button>
+    </div>
+
+    <div class="result-screen" id="result-box">
+        <h2>🎉 O'yin Yakunlandi!</h2>
+        <p style="font-size: 1.2rem;">Sizning umumiy natijangiz: <strong id="final-score" style="color: #98c379;">0</strong> ball</p>
+        <p id="grade-comment" style="color: #abb2bf;"></p>
+        <button class="restart-btn" onclick="restartQuiz()">Qayta o'ynash</button>
+    </div>
+</div>
+
+<script>
+const TIME_PER_Q = 30; // avval 20 edi, +10 soniyaga uzaytirildi
+
+const quizData = [
+    { q: "1. Avtomobil spidometri qaysi tezlikni ko'rsatadi?", opt: ["O'rtacha tezlikni", "Oniy (lahzalik) tezlikni", "Boshlang'ich tezlikni", "Maksimal tezlikni"], ans: 1, exp: "Spidometr ayni vaqtdagi lahzalik tezlikni ko'rsatadi." },
+    { q: "2. Massasi 4 kg bo'lgan jismga 12 N kuch ta'sir qilsa, uning tezlanishi qancha bo'ladi?", opt: ["48 m/s²", "8 m/s²", "3 m/s²", "0.33 m/s²"], ans: 2, exp: "Nyutonning 2-qonuni: a = F / m = 12 / 4 = 3 m/s²." },
+    { q: "3. Bosimning SI tizimidagi asosiy birligi nima?", opt: ["Nyuton (N)", "Joul (J)", "Vatt (W)", "Paskal (Pa)"], ans: 3, exp: "Bosim birligi Pa = N / m² hisoblanadi." },
+    { q: "4. Zaryadlangan bir xil ishorali ikkita jism qanday ta'sirlashadi?", opt: ["O'zaro tortishadi", "O'zaro itarishadi", "Ta'sirlashmaydi", "Neytrallashadi"], ans: 1, exp: "Bir xil zaryadlar (masalan, + va +) bir-birini itaradi." },
+    { q: "5. Mif yoki Haqiqat: Yorug'lik suvda havoga qaraganda sekinroq tarqaladi.", opt: ["Haqiqat", "Mif"], ans: 0, exp: "Haqiqat. Suv optik jihatdan zichroq muhit bo'lgani uchun yorug'lik sekinlashadi." },
+    { q: "6. O'tkazgichdagi kuchlanish 24 V, qarshiligi 8 Om bo'lsa, tok kuchi qancha?", opt: ["192 A", "3 A", "0.33 A", "16 A"], ans: 1, exp: "Om qonuni: I = U / R = 24 / 8 = 3 Amper." },
+    { q: "7. Ko'zguga 35° burchak ostida tushgan nur necha gradus burchak ostida qaytadi?", opt: ["55°", "90°", "35°", "70°"], ans: 2, exp: "Yorug'likning qaytish qonuni: tushish burchagi qaytish burchagiga teng (α = β)." },
+    { q: "8. Yerdagi erkin tushish tezlanishi (g) taxminan qanchaga teng?", opt: ["1.6 m/s²", "9.8 m/s²", "100 m/s²", "3·10⁸ m/s²"], ans: 1, exp: "Yer sirtida o'rtacha erkin tushish tezlanishi 9.8 m/s² ga teng." },
+    { q: "9. Modda molekulalarining o'z-o'zidan bir-biriga aralashishi qanday ataladi?", opt: ["Konveksiya", "Diffuziya", "Deformatsiya", "Inersiya"], ans: 1, exp: "Bu hodisa Diffuziya deb ataladi." },
+    { q: "10. Jismning massasi o'zgarmasdan tezligi 2 marta oshirilsa, kinetik energiyasi necha marta ortadi?", opt: ["2 marta", "4 marta", "O'zgarmaydi", "8 marta"], ans: 1, exp: "E_k = (m·v²)/2 formulasiga ko'ra, tezlik 2 marta oshsa, energiya 2² = 4 marta ortadi." }
+];
+
+let currentIdx = 0, score = 0, timer, timeLeft = TIME_PER_Q;
+
+function loadQuestion() {
+    clearInterval(timer);
+    timeLeft = TIME_PER_Q;
+    document.getElementById('time-left').innerText = timeLeft;
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('explanation-text').style.display = 'none';
+    
+    const cur = quizData[currentIdx];
+    document.getElementById('question-count').innerText = `Savol: ${currentIdx + 1}/${quizData.length}`;
+    document.getElementById('question-text').innerText = cur.q;
+    
+    const optsBox = document.getElementById('options-box');
+    optsBox.innerHTML = '';
+    
+    cur.opt.forEach((option, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-option';
+        btn.innerText = option;
+        btn.onclick = () => selectOption(i);
+        optsBox.appendChild(btn);
+    });
+    
+    timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('time-left').innerText = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            selectOption(-1);
+        }
+    }, 1000);
+}
+
+function selectOption(index) {
+    clearInterval(timer);
+    const cur = quizData[currentIdx];
+    const btns = document.querySelectorAll('.btn-option');
+    
+    btns.forEach((b, i) => {
+        b.disabled = true;
+        if (i === cur.ans) b.classList.add('correct');
+        else if (i === index) b.classList.add('wrong');
+    });
+    
+    if (index === cur.ans) {
+        score += 100 + timeLeft * 5;
+        document.getElementById('current-score').innerText = score;
+    }
+    
+    const exp = document.getElementById('explanation-text');
+    exp.innerText = "💡 Tushuntirish: " + (cur.exp || "Tushuntirish kiritilmagan.");
+    exp.style.display = 'block';
+    document.getElementById('next-btn').style.display = 'block';
+}
+
+function nextQuestion() {
+    currentIdx++;
+    if (currentIdx < quizData.length) {
+        loadQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById('quiz-box').style.display = 'none';
+    document.getElementById('result-box').style.display = 'block';
+    document.getElementById('final-score').innerText = score;
+    
+    let comment = "Yaxshi natija! Fizikani takrorlashda davom eting.";
+    if (score >= 1200) comment = "A'lo daraja! Haqiqiy fizik olim!";
+    else if (score >= 800) comment = "Juda yaxshi! Mavzularni mustahkamlash kifoya.";
+    document.getElementById('grade-comment').innerText = comment;
+}
+
+function restartQuiz() {
+    currentIdx = 0;
+    score = 0;
+    document.getElementById('current-score').innerText = '0';
+    document.getElementById('result-box').style.display = 'none';
+    document.getElementById('quiz-box').style.display = 'block';
+    loadQuestion();
+}
+
+// ---------- Savol qo'shish paneli ----------
+function toggleAddPanel() {
+    const panel = document.getElementById('add-q-panel');
+    panel.classList.toggle('open');
+    document.getElementById('add-q-msg').style.display = 'none';
+}
+
+function addNewQuestion() {
+    const text = document.getElementById('new-q-text').value.trim();
+    const opts = [0, 1, 2, 3].map(i => document.getElementById('new-q-opt-' + i).value.trim());
+    const exp = document.getElementById('new-q-exp').value.trim();
+    const correctRadio = document.querySelector('input[name="new-q-correct"]:checked');
+
+    if (!text) { alert("Savol matnini kiriting."); return; }
+    if (opts.some(o => !o)) { alert("Barcha 4 ta variantni to'ldiring."); return; }
+
+    quizData.push({
+        q: (quizData.length + 1) + ". " + text,
+        opt: opts,
+        ans: parseInt(correctRadio.value, 10),
+        exp: exp
+    });
+
+    document.getElementById('new-q-text').value = '';
+    [0, 1, 2, 3].forEach(i => document.getElementById('new-q-opt-' + i).value = '');
+    document.getElementById('new-q-exp').value = '';
+    document.querySelector('input[name="new-q-correct"][value="0"]').checked = true;
+
+    document.getElementById('question-count').innerText = `Savol: ${currentIdx + 1}/${quizData.length}`;
+    document.getElementById('add-q-msg').style.display = 'block';
+}
+
+loadQuestion();
+</script>
+</body>
+</html>
