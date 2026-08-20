@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fizika qonunlari — Kim kashf qilgan?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0B2440;
+    --bg-deep-2:#0E2E52;
+    --grid-line: rgba(233,242,251,0.06);
+    --card-back: #F3ECDB;
+    --card-back-2: #EAE1CB;
+    --ink: #1C2430;
+    --ink-soft: #4B5566;
+    --paper-line: rgba(28,36,48,0.10);
+    --text-light: #EAF2FB;
+    --text-light-soft: #A9C0DA;
+    --gold: #F2A93B;
+    --teal: #4FD1C5;
+    --stamp-red:#C0533E;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    background:
+      repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px 34px),
+      repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px 34px),
+      radial-gradient(1100px 600px at 80% -10%, rgba(79,209,197,0.10), transparent 60%),
+      linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-deep-2) 100%);
+    color: var(--text-light);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+  }
+
+  .wrap{
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+
+  header{
+    text-align:center;
+    margin-bottom: 48px;
+  }
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    background: rgba(79,209,197,0.10);
+    border: 1px solid rgba(79,209,197,0.30);
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+  }
+  .eyebrow svg{ width:14px; height:14px; }
+
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: clamp(32px, 5.5vw, 54px);
+    line-height:1.08;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h1 em{
+    font-style: normal;
+    color: var(--gold);
+  }
+
+  .subtitle{
+    font-size: 16px;
+    color: var(--text-light-soft);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height:1.5;
+  }
+  .subtitle .hint{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color: var(--gold);
+    font-weight:600;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 26px;
+  }
+
+  .card{
+    perspective: 1400px;
+    height: 320px;
+    cursor:pointer;
+    outline: none;
+  }
+  .card:focus-visible .card-inner{
+    box-shadow: 0 0 0 3px var(--teal), 0 18px 40px rgba(0,0,0,0.35);
+  }
+
+  .card-inner{
+    position:relative;
+    width:100%;
+    height:100%;
+    transition: transform 0.7s cubic-bezier(.2,.8,.2,1);
+    transform-style: preserve-3d;
+    border-radius: 18px;
+    box-shadow: 0 14px 30px rgba(2,10,22,0.45);
+  }
+  .card.flipped .card-inner{
+    transform: rotateY(180deg);
+  }
+
+  .face{
+    position:absolute;
+    inset:0;
+    backface-visibility: hidden;
+    border-radius: 18px;
+    padding: 26px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---- FRONT: blueprint chalk card ---- */
+  .front{
+    background:
+      radial-gradient(120% 140% at 100% 0%, rgba(242,169,59,0.14), transparent 55%),
+      linear-gradient(155deg, #14416B 0%, #0E3159 100%);
+    border: 1px solid rgba(233,242,251,0.14);
+  }
+
+  .law-no{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing: 0.12em;
+    color: var(--text-light-soft);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .law-no .icon{
+    width:34px; height:34px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+  .law-no .icon svg{ width:19px; height:19px; stroke: var(--gold); }
+
+  .law-name{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 21px;
+    margin: 16px 0 10px;
+    color: var(--text-light);
+    line-height:1.2;
+  }
+
+  .law-text{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13.5px;
+    line-height:1.55;
+    color: var(--text-light-soft);
+    flex:1;
+  }
+
+  .flip-hint{
+    font-size: 12px;
+    color: var(--gold);
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-weight:600;
+    margin-top: 10px;
+  }
+  .flip-hint svg{ width:13px; height:13px; }
+
+  /* ---- BACK: scientist reveal card ---- */
+  .back{
+    transform: rotateY(180deg);
+    background:
+      linear-gradient(180deg, var(--card-back) 0%, var(--card-back-2) 100%);
+    color: var(--ink);
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    border: 1px solid rgba(28,36,48,0.10);
+    position:relative;
+    overflow:hidden;
+  }
+  .back::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: repeating-linear-gradient(var(--paper-line) 0 1px, transparent 1px 28px);
+    opacity:0.6;
+  }
+
+  .medal{
+    width:64px; height:64px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(circle at 35% 30%, #fff, #F2A93B 70%);
+    border: 3px solid #1C2430;
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:26px;
+    color:#1C2430;
+    margin-bottom: 14px;
+    z-index:1;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+  }
+
+  .scientist-name{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size: 21px;
+    z-index:1;
+    margin-bottom:6px;
+  }
+
+  .scientist-year{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color: var(--ink-soft);
+    z-index:1;
+    margin-bottom: 12px;
+    letter-spacing: 0.04em;
+  }
+
+  .scientist-fact{
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height:1.5;
+    max-width: 220px;
+    z-index:1;
+  }
+
+  .stamp{
+    position:absolute;
+    top:14px; right:14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--stamp-red);
+    border: 1.5px solid var(--stamp-red);
+    padding: 3px 8px;
+    border-radius: 6px;
+    transform: rotate(6deg);
+    z-index:1;
+    opacity:0.85;
+  }
+
+  footer{
+    text-align:center;
+    margin-top: 52px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-light-soft);
+    letter-spacing: 0.04em;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card-inner{ transition:none; }
+  }
+
+  @media (max-width: 560px){
+    .card{ height: 300px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h8l-1 8 10-12h-8z"/></svg>
+      Haftalik fizika viktorinasi
+    </span>
+    <h1>Bu qonunni <em>kim</em><br>kashf qilgan?</h1>
+    <p class="subtitle">Har bir kartochkada mashhur fizika qonuni yozilgan. Avval o'zingiz taxmin qiling, so'ng <span class="hint">kartochkani bosib</span> javobni tekshiring.</p>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>6 / 6 ta qonun &nbsp;·&nbsp; kartochkani bosing va aylantiring</footer>
+</div>
+
+<script>
+const laws = [
+  {
+    icon: '<path d="M12 3v6M12 21v-6M6 12H3M21 12h-3M7 7l2 2M17 7l-2 2M7 17l2-2M17 17l-2-2"/><circle cx="12" cy="12" r="3"/>',
+    name: "Butun olam tortishish qonuni",
+    text: "Ikki jism bir-birini massalari ko'paytmasiga to'g'ri, orasidagi masofa kvadratiga teskari proportsional kuch bilan tortadi.",
+    initial: "N",
+    who: "Isaak Nyuton",
+    year: "1687-yil · «Principia Mathematica»",
+    fact: "Rivoyatga ko'ra, daraxtdan tushayotgan olma uni bu qonunni o'ylab topishga undagan."
+  },
+  {
+    icon: '<path d="M4 12h2l1.5-4 2 8 2-8 2 8 1.5-4H18"/>',
+    name: "Elastik deformatsiya qonuni",
+    text: "Elastik jismning cho'zilishi yoki siqilishi, unga qo'yilgan kuchga to'g'ri proportsional bo'ladi (ma'lum chegaragacha).",
+    initial: "H",
+    who: "Robert Guk",
+    year: "1660-yil",
+    fact: "Kashfiyotini avval «ceiiinosssttuv» degan sirli anagramma sifatida e'lon qilib, keyingina ochib bergan."
+  },
+  {
+    icon: '<path d="M4 19h16M6 19V9l6-5 6 5v10M10 19v-6h4v6"/>',
+    name: "Suyuqlikka botirish qonuni",
+    text: "Suyuqlikka botirilgan jismga, u siqib chiqargan suyuqlik og'irligiga teng, yuqoriga yo'nalgan ko'tarish kuchi ta'sir etadi.",
+    initial: "A",
+    who: "Arximed",
+    year: "Miloddan avvalgi ~250-yil",
+    fact: "Bu qonunni hammomda cho'milayotganda topib, «Evrika!» deb ko'chaga yugurib chiqqani afsonaga aylangan."
+  },
+  {
+    icon: '<path d="M12 3v18M6 8l6-5 6 5M6 16l6 5 6-5"/>',
+    name: "Yopiq idishdagi bosim qonuni",
+    text: "Yopiq idishdagi suyuqlikning bir nuqtasiga qo'yilgan bosim o'zgarishsiz barcha yo'nalishlarga bab-baravar uzatiladi.",
+    initial: "P",
+    who: "Blez Paskal",
+    year: "1653-yil",
+    fact: "Faqat 16 yoshida geometriya bo'yicha ilmiy ish yozgan frantsuz olimi va faylasufi."
+  },
+  {
+    icon: '<circle cx="7" cy="12" r="3"/><circle cx="17" cy="12" r="3"/><path d="M10 12h4"/>',
+    name: "Zaryadlar o'zaro ta'siri qonuni",
+    text: "Ikki nuqtaviy zaryad orasidagi kuch ularning zaryadlari ko'paytmasiga to'g'ri, masofa kvadratiga teskari proportsionaldir.",
+    initial: "C",
+    who: "Sharl Kulon",
+    year: "1785-yil",
+    fact: "Kuchni o'lchash uchun o'zi ixtiro qilgan maxsus buralish tarozisidan (torsion balans) foydalangan."
+  },
+  {
+    icon: '<rect x="5" y="8" width="14" height="10" rx="1"/><path d="M9 8V5h6v3"/>',
+    name: "Gaz hajmi va bosimi qonuni",
+    text: "O'zgarmas haroratda berilgan gaz massasining bosimi uning hajmiga teskari proportsionaldir.",
+    initial: "B",
+    who: "Robert Boyl va Edm Mariott",
+    year: "1662 / 1676-yil",
+    fact: "Ikki olim bir-biridan bexabar, turli mamlakatlarda, deyarli 15 yil farq bilan bir xil qonunni kashf etgan."
+  }
+];
+
+const grid = document.getElementById('grid');
+
+laws.forEach((law, i) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.tabIndex = 0;
+  card.setAttribute('role', 'button');
+  card.setAttribute('aria-label', `${i+1}-qonun. Bosib javobni ko'ring.`);
+
+  card.innerHTML = `
+    <div class="card-inner">
+      <div class="face front">
+        <div class="law-no">
+          <span>QONUN ${String(i+1).padStart(2,'0')}</span>
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">${law.icon}</svg></span>
+        </div>
+        <div class="law-name">${law.name}</div>
+        <div class="law-text">${law.text}</div>
+        <div class="flip-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v8M8 12h8"/><circle cx="12" cy="12" r="9"/></svg>
+          Kim kashf qilgan? Bosing
+        </div>
+      </div>
+      <div class="face back">
+        <div class="stamp">JAVOB</div>
+        <div class="medal">${law.initial}</div>
+        <div class="scientist-name">${law.who}</div>
+        <div class="scientist-year">${law.year}</div>
+        <div class="scientist-fact">${law.fact}</div>
+      </div>
+    </div>
+  `;
+
+  const toggle = () => card.classList.toggle('flipped');
+  card.addEventListener('click', toggle);
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+  });
+
+  grid.appendChild(card);
+});
+</script>
+
+</body>
+</html>
