@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fizika testi — Kuchlarning teng ta'sir etuvchisi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1b2d;
+    --bg-2:#0a1420;
+    --surface:#16273f;
+    --panel:#122036;
+    --chip:#1c3050;
+    --chip-hover:#223a5e;
+    --chalk:#eef2f6;
+    --chalk-dim:#93a6bc;
+    --grid-line:rgba(238,242,246,0.05);
+    --gold:#e8c468;
+    --f1:#e2574c;
+    --f2:#5b9bf0;
+    --f3:#55b788;
+    --f4:#b98af0;
+    --wrong:#e2574c;
+    --correct:#55c08a;
+    --radius:18px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, #16283f 0%, var(--bg) 55%, var(--bg-2) 100%);
+    background-color:var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+      radial-gradient(ellipse 900px 500px at 50% -10%, #16283f 0%, var(--bg) 55%, var(--bg-2) 100%);
+    background-size: 28px 28px, 28px 28px, 100% 100%;
+    font-family:'Inter', sans-serif;
+    color:var(--chalk);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+
+  .card{
+    width:100%;
+    max-width:620px;
+    background:linear-gradient(180deg, var(--surface) 0%, #132234 100%);
+    border:1px solid rgba(238,242,246,0.08);
+    border-radius:var(--radius);
+    padding:30px 28px 26px;
+    box-shadow:0 30px 60px -25px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  }
+
+  .eyebrow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    font-weight:500;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--chalk-dim);
+    margin-bottom:14px;
+  }
+  .eyebrow .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 8px 1px rgba(232,196,104,0.6);
+  }
+
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:22px;
+    line-height:1.35;
+    margin:0 0 20px;
+    color:var(--chalk);
+  }
+  h1 .qnum{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--gold);
+    font-weight:700;
+    margin-right:8px;
+  }
+
+  .diagram-wrap{
+    background:var(--panel);
+    border:1px solid rgba(238,242,246,0.06);
+    border-radius:14px;
+    padding:6px 4px 0;
+    margin-bottom:22px;
+    overflow:hidden;
+  }
+
+  svg{display:block;width:100%;height:auto;}
+
+  .vec{
+    fill:none;
+    stroke-width:4.5;
+    stroke-linecap:round;
+  }
+  .vec-f1{stroke:var(--f1);}
+  .vec-f2{stroke:var(--f2);}
+  .vec-f3{stroke:var(--f3);}
+  .vec-f4{stroke:var(--f4);}
+
+  .axis-dashed{
+    stroke:rgba(238,242,246,0.28);
+    stroke-width:1.6;
+    stroke-dasharray:5 6;
+    fill:none;
+  }
+
+  .arc{
+    fill:none;
+    stroke:rgba(238,242,246,0.4);
+    stroke-width:1.6;
+  }
+
+  .arc-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:15px;
+    fill:var(--chalk-dim);
+    text-anchor:middle;
+  }
+
+  .force-label{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:600;
+    font-size:16.5px;
+    text-anchor:middle;
+  }
+  .force-label.f1{fill:var(--f1);}
+  .force-label.f2{fill:var(--f2);}
+  .force-label.f3{fill:var(--f3);}
+  .force-label.f4{fill:var(--f4);}
+
+  .vertex-dot{fill:var(--chalk);}
+
+  .options{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:14px;
+  }
+
+  .opt{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--chip);
+    border:1px solid rgba(238,242,246,0.08);
+    border-radius:12px;
+    padding:14px 16px;
+    cursor:pointer;
+    text-align:left;
+    transition:background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+  }
+  .opt:hover:not(.locked){
+    background:var(--chip-hover);
+    border-color:rgba(238,242,246,0.18);
+  }
+  .opt:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+  .opt:active:not(.locked){transform:scale(0.98);}
+
+  .opt .letter{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:13px;
+    color:var(--chalk-dim);
+    width:22px;height:22px;
+    border-radius:6px;
+    background:rgba(238,242,246,0.06);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .opt .val{
+    font-family:'JetBrains Mono', monospace;
+    font-size:16px;
+    font-weight:500;
+    color:var(--chalk);
+  }
+
+  .opt.correct{
+    background:rgba(85,192,138,0.14);
+    border-color:var(--correct);
+  }
+  .opt.correct .letter{background:var(--correct);color:#0a1a12;}
+  .opt.wrong{
+    background:rgba(226,87,76,0.14);
+    border-color:var(--wrong);
+  }
+  .opt.wrong .letter{background:var(--wrong);color:#2a0e0b;}
+
+  .hint{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    color:var(--chalk-dim);
+    letter-spacing:0.03em;
+    min-height:18px;
+    margin-bottom:4px;
+    transition:color 0.2s ease;
+  }
+  .hint.state-correct{color:var(--correct);}
+  .hint.state-wrong{color:var(--wrong);}
+
+  .solution{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height 0.45s cubic-bezier(.4,0,.2,1), opacity 0.4s ease;
+    opacity:0;
+  }
+  .solution.open{
+    max-height:320px;
+    opacity:1;
+    margin-top:14px;
+  }
+  .solution-inner{
+    border-top:1px dashed rgba(238,242,246,0.14);
+    padding-top:16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .sol-row{
+    font-size:14px;
+    line-height:1.55;
+    color:var(--chalk-dim);
+  }
+  .sol-row b{color:var(--gold);font-weight:600;}
+  .sol-row .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--chalk);
+    background:rgba(238,242,246,0.08);
+    border-radius:5px;
+    padding:2px 7px;
+    margin-right:8px;
+  }
+
+  .retry-btn{
+    align-self:flex-start;
+    margin-top:4px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--gold);
+    background:rgba(232,196,104,0.1);
+    border:1px solid rgba(232,196,104,0.35);
+    border-radius:8px;
+    padding:8px 14px;
+    cursor:pointer;
+    transition:background 0.15s ease, transform 0.1s ease;
+  }
+  .retry-btn:hover{background:rgba(232,196,104,0.18);}
+  .retry-btn:active{transform:scale(0.97);}
+  .retry-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  @media (max-width:480px){
+    .card{padding:22px 18px 20px;}
+    h1{font-size:19px;}
+    .options{grid-template-columns:1fr;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .vec, .arc, .axis-dashed{transition:none !important;}
+    .opt, .solution{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="eyebrow"><span class="dot"></span>Fizika · Kuch va dinamika</div>
+  <h1><span class="qnum">1.</span>Kuchlarning teng ta'sir etuvchisini toping (N)</h1>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 640 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrowF1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="var(--f1)"/>
+        </marker>
+        <marker id="arrowF2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="var(--f2)"/>
+        </marker>
+        <marker id="arrowF3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="var(--f3)"/>
+        </marker>
+        <marker id="arrowF4" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="var(--f4)"/>
+        </marker>
+      </defs>
+
+      <!-- vertical reference (bisector of F1-F2) -->
+      <line class="axis-dashed" x1="320" y1="300" x2="320" y2="140"/>
+
+      <!-- angle arcs -->
+      <path class="arc" d="M 272.5,217.7 L 269.0,219.9 L 265.5,222.2 L 262.2,224.6 L 258.9,227.2 L 255.8,230.0 L 252.8,232.8 L 250.0,235.8 L 247.2,238.9 L 244.6,242.2 L 242.2,245.5 L 239.9,249.0 L 237.7,252.5 L 235.7,256.1 L 233.9,259.9 L 232.2,263.6 L 230.7,267.5 L 229.4,271.4 L 228.2,275.4 L 227.3,279.4 L 226.4,283.5 L 225.8,287.6 L 225.4,291.7 L 225.1,295.9 L 225.0,300.0"/>
+      <path class="arc" d="M 351.0,246.3 L 348.6,245.0 L 346.2,243.8 L 343.7,242.7 L 341.2,241.7 L 338.6,240.9 L 336.0,240.1 L 333.4,239.5 L 330.8,238.9 L 328.1,238.5 L 325.4,238.2 L 322.7,238.1 L 320.0,238.0 L 317.3,238.1 L 314.6,238.2 L 311.9,238.5 L 309.2,238.9 L 306.6,239.5 L 304.0,240.1 L 301.4,240.9 L 298.8,241.7 L 296.3,242.7 L 293.8,243.8 L 291.4,245.0 L 289.0,246.3"/>
+      <path class="arc" d="M 415.0,300.0 L 414.9,295.9 L 414.6,291.7 L 414.2,287.6 L 413.6,283.5 L 412.7,279.4 L 411.8,275.4 L 410.6,271.4 L 409.3,267.5 L 407.8,263.6 L 406.1,259.9 L 404.3,256.1 L 402.3,252.5 L 400.1,249.0 L 397.8,245.5 L 395.4,242.2 L 392.8,238.9 L 390.0,235.8 L 387.2,232.8 L 384.2,230.0 L 381.1,227.2 L 377.8,224.6 L 374.5,222.2 L 371.0,219.9 L 367.5,217.7"/>
+
+      <text class="arc-label" x="219.6" y="246.1">60°</text>
+      <text class="arc-label" x="320" y="223.4">60°</text>
+      <text class="arc-label" x="420.4" y="246.1">60°</text>
+
+      <!-- force vectors -->
+      <line class="vec vec-f3" x1="320" y1="300" x2="153" y2="300" marker-end="url(#arrowF3)"/>
+      <line class="vec vec-f4" x1="320" y1="300" x2="432" y2="300" marker-end="url(#arrowF4)"/>
+      <line class="vec vec-f1" x1="320" y1="300" x2="248" y2="172.6" marker-end="url(#arrowF1)"/>
+      <line class="vec vec-f2" x1="320" y1="300" x2="392" y2="172.6" marker-end="url(#arrowF2)"/>
+
+      <circle class="vertex-dot" cx="320" cy="300" r="4.5"/>
+
+      <text class="force-label f1" x="200" y="150">F₁ = 5√3 N</text>
+      <text class="force-label f2" x="440" y="150">F₂ = 5√3 N</text>
+      <text class="force-label f3" x="150" y="338">F₃ = 20 N</text>
+      <text class="force-label f4" x="435" y="338">F₄ = 5 N</text>
+    </svg>
+  </div>
+
+  <div class="options" id="options">
+    <button class="opt" data-id="a" data-correct="true"><span class="letter">A</span><span class="val">15√2</span></button>
+    <button class="opt" data-id="b"><span class="letter">B</span><span class="val">20√2</span></button>
+    <button class="opt" data-id="c"><span class="letter">C</span><span class="val">25√3</span></button>
+    <button class="opt" data-id="d"><span class="letter">D</span><span class="val">30</span></button>
+  </div>
+
+  <div class="hint" id="hint">Javobni tanlang</div>
+
+  <div class="solution" id="solution">
+    <div class="solution-inner">
+      <div class="sol-row"><span class="tag">1-qadam</span>F₁ va F₂ ning gorizontal tashkil etuvchilari teng va qarama-qarshi — bir-birini yo'qotadi.</div>
+      <div class="sol-row"><span class="tag">2-qadam</span>Vertikal yig'indi: 2 · 5√3 · sin60° = <b>15 N</b></div>
+      <div class="sol-row"><span class="tag">3-qadam</span>F₃ va F₄ gorizontal bo'ylab: 20 − 5 = <b>15 N</b></div>
+      <div class="sol-row"><span class="tag">Natija</span>R = √(15² + 15²) = <b>15√2 N</b></div>
+      <button class="retry-btn" id="retryBtn">↺ Qayta urinish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const opts = document.querySelectorAll('.opt');
+  const hint = document.getElementById('hint');
+  const solution = document.getElementById('solution');
+  const retryBtn = document.getElementById('retryBtn');
+  let answered = false;
+
+  opts.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+
+      const isCorrect = btn.dataset.correct === 'true';
+      opts.forEach(o => o.classList.add('locked'));
+
+      opts.forEach(o => {
+        if (o.dataset.correct === 'true') o.classList.add('correct');
+      });
+      if (!isCorrect) btn.classList.add('wrong');
+
+      hint.textContent = isCorrect ? "To'g'ri! ✓" : "Noto'g'ri — to'g'ri javob yashil rangda belgilandi.";
+      hint.classList.add(isCorrect ? 'state-correct' : 'state-wrong');
+
+      solution.classList.add('open');
+    });
+  });
+
+  retryBtn.addEventListener('click', () => {
+    answered = false;
+    opts.forEach(o => o.classList.remove('locked', 'correct', 'wrong'));
+    hint.textContent = "Javobni tanlang";
+    hint.classList.remove('state-correct', 'state-wrong');
+    solution.classList.remove('open');
+  });
+</script>
+
+</body>
+</html>
