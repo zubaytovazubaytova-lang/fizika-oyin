@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ishqalanish orqali Elektrlanish — Interaktiv Simulyatsiya</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        padding: 16px;
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        color: #ffffff;
+        font-family: 'Poppins', -apple-system, 'Segoe UI', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+    }
+    .header-badge {
+        background: linear-gradient(90deg, #ff416c, #ff4b2b);
+        padding: 6px 18px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
+    }
+    h2 {
+        margin: 4px 0 4px;
+        font-size: clamp(17px, 4.5vw, 22px);
+        color: #00ffcc;
+        text-shadow: 0 0 12px rgba(0,255,204,0.45);
+        text-align: center;
+    }
+    .subtitle {
+        color: #a0aec0;
+        font-size: 13px;
+        margin-bottom: 14px;
+        text-align: center;
+    }
+
+    .callout-banner {
+        display: none;
+        position: relative;
+        width: 100%;
+        max-width: 960px;
+        background: rgba(13,13,35,0.97);
+        border: 2px solid #00ffcc;
+        border-radius: 14px;
+        padding: 12px 40px 12px 16px;
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: #e8f9ff;
+        box-shadow: 0 8px 24px rgba(0,255,204,0.25);
+        margin-bottom: 14px;
+    }
+    .callout-banner b { color: #ffe082; }
+    .callout-close {
+        position: absolute;
+        top: 6px;
+        right: 10px;
+        cursor: pointer;
+        font-size: 22px;
+        line-height: 1;
+        color: #00ffcc;
+        font-weight: bold;
+    }
+    .callout-close:hover { color: #ffffff; }
+
+    #canvas-container {
+        position: relative;
+        width: 100%;
+        max-width: 960px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        border-radius: 20px;
+        overflow: hidden;
+        background: #1a1a3a;
+        border: 3px solid rgba(0,255,204,0.3);
+    }
+    canvas {
+        display: block;
+        touch-action: none;
+        cursor: grab;
+        background: radial-gradient(circle at center, #1b2838, #0d1b2a);
+    }
+    canvas.dragging { cursor: grabbing; }
+
+    #chargeHud {
+        position: absolute;
+        top: 3%;
+        right: 3%;
+        background: rgba(13,13,35,0.75);
+        border: 1px solid rgba(0,255,204,0.4);
+        border-radius: 10px;
+        padding: clamp(5px,1.4vw,9px) clamp(7px,2vw,12px);
+        min-width: 22%;
+        max-width: 44%;
+        backdrop-filter: blur(4px);
+    }
+    #chargeHud .label {
+        font-size: clamp(8.5px, 2.4vw, 12px);
+        color: #b6c0d6;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+        white-space: nowrap;
+    }
+    #chargeHud .pct { color: #ffe082; font-weight: 700; }
+    .meter-track { width: 100%; height: clamp(5px,1.2vw,8px); background: #2a2a45; border-radius: 4px; overflow: hidden; }
+    .meter-fill {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #ff416c, #ff8a5b);
+        border-radius: 4px;
+        transition: width 0.12s linear;
+    }
+    .meter-fill.full {
+        background: linear-gradient(90deg, #00b4db, #00ffcc);
+        box-shadow: 0 0 8px #00ffcc;
+    }
+
+    #legendHud {
+        position: absolute;
+        top: 3%;
+        left: 3%;
+        max-width: 48%;
+        background: rgba(13,13,35,0.75);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 10px;
+        padding: clamp(5px,1.4vw,8px) clamp(7px,2vw,11px);
+        font-size: clamp(8px, 2.2vw, 12px);
+        color: #d6dcea;
+        backdrop-filter: blur(4px);
+        line-height: 1.35;
+    }
+    #legendHud div { display: flex; align-items: center; gap: 5px; margin: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dot {
+        width: clamp(9px,2.4vw,13px); height: clamp(9px,2.4vw,13px);
+        border-radius: 50%; display: inline-flex; align-items:center; justify-content:center;
+        font-size: clamp(7px,1.8vw,10px); font-weight:bold; color:#0a0a23; flex-shrink:0;
+    }
+    .dot.plus  { background: #ff416c; box-shadow: 0 0 6px #ff416c; color:#fff; }
+    .dot.minus { background: #00ffcc; box-shadow: 0 0 6px #00ffcc; }
+
+    .controls { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    button {
+        color: white; border: none; padding: 12px 22px; font-size: 14px; font-weight: 600;
+        border-radius: 12px; cursor: pointer; transition: all 0.25s ease;
+        display: flex; align-items: center; gap: 8px;
+    }
+    button:hover { transform: translateY(-2px); }
+    button:active { transform: translateY(1px); }
+    #btnReset { background: linear-gradient(135deg, #eb3349, #f45c43); box-shadow: 0 5px 15px rgba(235,51,73,0.4); }
+    #btnInfo  { background: linear-gradient(135deg, #8e2de2, #4a00e0); box-shadow: 0 5px 15px rgba(142,45,226,0.4); }
+
+    .instructions {
+        margin-top: 14px;
+        font-size: 14px;
+        color: #cbd5e0;
+        text-align: center;
+        max-width: 700px;
+        min-height: 20px;
+        line-height: 1.55;
+        background: rgba(255,255,255,0.05);
+        padding: 10px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10;
+        inset: 0;
+        background-color: rgba(10,10,26,0.85);
+        backdrop-filter: blur(5px);
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .modal-content {
+        background: linear-gradient(135deg, #16213e, #0f3460);
+        padding: 26px 30px;
+        border-radius: 20px;
+        width: 520px;
+        max-width: 100%;
+        box-shadow: 0 10px 30px rgba(0,255,204,0.2);
+        border: 2px solid #00ffcc;
+        position: relative;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+    .close-btn { color: #00ffcc; position: absolute; right: 18px; top: 14px; font-size: 26px; font-weight: bold; cursor: pointer; }
+    .close-btn:hover { color: #fff; }
+    .modal-content h3 { color: #00ffcc; margin-top: 0; font-size: 19px; }
+    .modal-content p { font-size: 14px; line-height: 1.6; color: #e2e8f0; }
+</style>
+</head>
+<body>
+
+<div class="header-badge">⚡ 8-SINF</div>
+<h2>Ishqalanish orqali Elektrlanish</h2>
+<div class="subtitle">Ebonit tayoqcha + Jun mato — tayoqchani ushlab suring</div>
+
+<div id="calloutBanner" class="callout-banner">
+    <span class="callout-close" onclick="closeCallout()">&times;</span>
+    <span id="calloutText"></span>
+</div>
+
+<div id="canvas-container">
+    <canvas id="simCanvas" width="960" height="672"></canvas>
+
+    <div id="legendHud">
+        <div><span class="dot plus">+</span> Musbat (mato)</div>
+        <div><span class="dot minus">–</span> Manfiy (tayoqcha)</div>
+    </div>
+    <div id="chargeHud">
+        <div class="label"><span>Zaryad</span><span class="pct" id="chargeText">0%</span></div>
+        <div class="meter-track"><div class="meter-fill" id="chargeFill"></div></div>
+    </div>
+</div>
+
+<div class="controls">
+    <button id="btnReset" onclick="resetSimulation()">🔄 Qayta boshlash</button>
+    <button id="btnInfo" onclick="openInfoModal()">💡 Jarayon haqida</button>
+</div>
+
+<div class="instructions" id="instructionText">
+    1-bosqich: Ebonit tayoqchani ushlab, jun mato ustida suring 👆 — ebonit elektronni junga qaraganda kuchliroq tortadi, shuning uchun elektronlar mato'dan tayoqchaga o'tadi.
+</div>
+
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeInfoModal()">&times;</span>
+        <h3>✨ Tajriba siri va fizika qonunlari</h3>
+        <p><b>1. Materiallar:</b> Bu tajribada <b>ebonit tayoqcha</b> <b>jun matoga</b> ishqalanadi.</p>
+        <p><b>2. Nega tayoqcha manfiy bo'ladi:</b> Ishqalanganda, mato'dagi ba'zi zarrachalar (elektronlar) tayoqchaga o'tib qoladi. Ko'proq zarracha olgan tayoqcha — <b>manfiy (–)</b>, zarracha bergan mato — <b>musbat (+)</b> bo'lib qoladi.</p>
+        <p><b>3. Nega qog'oz tortiladi — o'zi zaryadlanmagan bo'lsa ham:</b> Qog'oz ichida musbat va manfiy zarrachalar boshidanoq bor — lekin teng miqdorda, aralash holda, shuning uchun tashqaridan "zaryadsiz" ko'rinadi. Manfiy tayoqcha yaqinlashganda, bu zarrachalar (yangi zaryad paydo bo'lmasdan) ikki tomonga ajraladi: yaqin tomonda musbat, uzoq tomonda manfiy zarrachalar to'planadi. Yaqin tomon kuchliroq tortilgani uchun, butun qog'oz tayoqcha tomon suriladi.</p>
+        <p style="opacity:.8"><b>Qo'shimcha (keyinroq foydali):</b> Bu hodisaning maxsus nomi bor — <b>induksiya</b>. Hozircha nomni yodlash shart emas, faqat "yaqin tomon +, uzoq tomon –" tamoyilini tushunish kifoya.</p>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+const canvasContainer = document.getElementById('canvas-container');
+const chargeFillEl = document.getElementById('chargeFill');
+const chargeTextEl = document.getElementById('chargeText');
+const instructionEl = document.getElementById('instructionText');
+const calloutBanner = document.getElementById('calloutBanner');
+const calloutTextEl = document.getElementById('calloutText');
+
+/* ---------- Audio ---------- */
+let audioCtx = null;
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+let lastFrictionSoundAt = 0;
+function playFrictionSound() {
+    if (!audioCtx) return;
+    const now = performance.now();
+    if (now - lastFrictionSoundAt < 110) return;
+    lastFrictionSoundAt = now;
+    const bufferSize = audioCtx.sampleRate * 0.15;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 1200;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+    noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+    noise.start();
+}
+function playPopSound() {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+}
+function playChargedChime() {
+    if (!audioCtx) return;
+    [660, 880].forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        const t0 = audioCtx.currentTime + i * 0.09;
+        gain.gain.setValueAtTime(0.001, t0);
+        gain.gain.linearRampToValueAtTime(0.2, t0 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.25);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(t0); osc.stop(t0 + 0.26);
+    });
+}
+
+/* ============ MOSLASHUVCHAN (RESPONSIVE) STEND TIZIMI ============
+   Barcha o'lchamlar canvas.width/height ning FOIZI sifatida hisoblanadi.
+   Ekran o'lchami o'zgarsa (mobil/desktop/aylantirish), recomputeLayout()
+   hammasini qayta hisoblab chiqadi — hech narsa qattiq pikselga bog'lanmagan. */
+
+const NEG_COLOR = '#00ffcc';
+const POS_COLOR = '#ff416c';
+const DESIGN_W = 960; // nisbiy shrift/chiziq qalinligini hisoblash uchun bazaviy o'lcham
+let S = 1;             // joriy masshtab koeffitsienti (canvas.width / DESIGN_W)
+
+const cloth = {};
+const box = {};
+const rod = { charged: false };
+let ROD_HALF_W = 0, ROD_HALF_H = 0;
+
+const SYMBOL_COUNT = 8;
+let clothSlots = [];
+let rodSlotsLocalX = [];
+
+let ATTRACT_RANGE, ATTACH_DIST, ACCEL, CHARGE_FOR_100;
+const DAMPING = 0.90;
+const RETURN_FACTOR = 0.045;
+
+let charge = 0;
+let hasStartedRubbing = false;
+let isDragging = false;
+let dragDX = 0, dragDY = 0;
+let lastPointer = null;
+let particles = [];
+let electrons = [];
+let inductionExplainShown = false;
+let allAttachedAnnounced = false;
+let papers = [];
+
+function f(basePx) { return Math.max(basePx * 0.6, basePx * S); } // shrift/chiziq uchun min-cheklovli masshtablash
+
+function recomputeLayout() {
+    const w = canvas.width, h = canvas.height;
+    S = w / DESIGN_W;
+
+    cloth.x = w * 0.146; cloth.y = h * 0.40; cloth.width = w * 0.26; cloth.height = h * 0.065;
+    box.x = w * 0.583;   box.y = h * 0.60;   box.width = w * 0.344; box.height = h * 0.22;
+    rod.width = w * 0.292; rod.height = Math.max(14, h * 0.045);
+    ROD_HALF_W = rod.width / 2; ROD_HALF_H = rod.height / 2;
+    rod.x = w * 0.276; rod.y = h * 0.36;
+    rod.charged = false;
+
+    clothSlots = [];
+    for (let i = 0; i < SYMBOL_COUNT; i++) {
+        clothSlots.push({ x: cloth.x + cloth.width * 0.08 + i * (cloth.width * 0.84) / (SYMBOL_COUNT - 1), y: cloth.y - f(3) });
+    }
+    rodSlotsLocalX = [];
+    for (let i = 0; i < SYMBOL_COUNT; i++) {
+        rodSlotsLocalX.push(-ROD_HALF_W + rod.width * 0.08 + i * (rod.width * 0.84) / (SYMBOL_COUNT - 1));
+    }
+
+    ATTRACT_RANGE = w * 0.27;
+    ATTACH_DIST = w * 0.027;
+    ACCEL = 0.55 * S;
+    CHARGE_FOR_100 = w * 1.15;
+
+    charge = 0;
+    chargeFillEl.style.width = '0%';
+    chargeFillEl.classList.remove('full');
+    chargeTextEl.textContent = '0%';
+    particles = [];
+    electrons = [];
+    papers = makePapers();
+}
+
+function makePapers() {
+    const list = [];
+    const cols = 7, rows = 2;
+    let idx = 0;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const baseX = box.x + box.width * 0.10 + c * (box.width * 0.80) / (cols - 1) + (Math.random() * box.width * 0.02 - box.width * 0.01);
+            const baseY = box.y + box.height - box.height * 0.20 - r * (box.height * 0.16) + (Math.random() * box.height * 0.02 - box.height * 0.01);
+            list.push({
+                id: idx++, x: baseX, y: baseY, baseX, baseY,
+                w: box.width * (0.052 + Math.random() * 0.018),
+                h: box.width * (0.032 + Math.random() * 0.012),
+                rot: (Math.random() * 30 - 15) * Math.PI / 180,
+                vx: 0, vy: 0,
+                attached: false, attachOffX: 0, attachOffY: 0
+            });
+        }
+    }
+    return list;
+}
+
+/* ---------- Canvasni haqiqiy o'lchamga moslash ---------- */
+function resizeCanvas() {
+    const displayW = Math.max(280, Math.round(canvasContainer.clientWidth));
+    const displayH = Math.round(displayW * 0.70); // 10:7 nisbat — mobilga qulayroq
+    canvas.width = displayW;
+    canvas.height = displayH;
+    canvas.style.width = displayW + 'px';
+    canvas.style.height = displayH + 'px';
+    recomputeLayout();
+}
+
+let resizeTimer = null;
+function scheduleResize() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        resizeCanvas();
+        inductionExplainShown = false;
+        closeCallout();
+        instructionEl.textContent = "1-bosqich: Ebonit tayoqchani ushlab, jun mato ustida suring 👆 — ebonit elektronni junga qaraganda kuchliroq tortadi, shuning uchun elektronlar mato'dan tayoqchaga o'tadi.";
+    }, 180);
+}
+window.addEventListener('resize', scheduleResize);
+window.addEventListener('orientationchange', scheduleResize);
+
+function showCallout(text) {
+    calloutTextEl.innerHTML = text;
+    calloutBanner.style.display = 'block';
+}
+function closeCallout() { calloutBanner.style.display = 'none'; }
+
+/* ---------- Drawing helpers ---------- */
+function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+function drawChargeBadge(x, y, sign) {
+    const r = f(10);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = sign === '+' ? POS_COLOR : NEG_COLOR;
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = f(9);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = sign === '+' ? '#ffffff' : '#0a0a23';
+    ctx.font = `bold ${f(13)}px Poppins, Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(sign, x, y + 0.5);
+    ctx.restore();
+}
+
+/* ---------- Scene parts ---------- */
+function drawTable() {
+    const w = canvas.width, h = canvas.height;
+    ctx.fillStyle = '#b07d62';
+    ctx.fillRect(w * 0.073, h * 0.853, w * 0.865, h * 0.027);
+    ctx.fillStyle = '#8d5b4c';
+    ctx.fillRect(w * 0.073, h * 0.88, w * 0.865, h * 0.095);
+}
+
+function drawCloth() {
+    ctx.save();
+    const grad = ctx.createLinearGradient(cloth.x, cloth.y, cloth.x, cloth.y + cloth.height);
+    grad.addColorStop(0, '#e8e2d6');
+    grad.addColorStop(1, '#cfc6b3');
+    ctx.fillStyle = grad;
+    ctx.strokeStyle = '#a89a7c';
+    ctx.lineWidth = f(2);
+    roundRect(cloth.x, cloth.y, cloth.width, cloth.height, f(6));
+    ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(150,135,100,0.35)';
+    ctx.lineWidth = f(1);
+    for (let i = 1; i < 7; i++) {
+        const yy = cloth.y + (cloth.height / 7) * i;
+        ctx.beginPath();
+        ctx.moveTo(cloth.x + f(5), yy);
+        ctx.lineTo(cloth.x + cloth.width - f(5), yy);
+        ctx.stroke();
+    }
+    ctx.fillStyle = '#a89a7c';
+    ctx.font = `bold ${f(13)}px Poppins, Arial`;
+    ctx.textAlign = 'center';
+    ctx.fillText('JUN MATO', cloth.x + cloth.width / 2, cloth.y + cloth.height + f(18));
+    ctx.restore();
+}
+
+function drawBox() {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.strokeStyle = 'rgba(0,255,204,0.5)';
+    ctx.lineWidth = f(2.5);
+    roundRect(box.x, box.y, box.width, box.height, f(10));
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+}
+
+function drawRod() {
+    ctx.save();
+    ctx.translate(rod.x, rod.y);
+    if (rod.charged) { ctx.shadowColor = NEG_COLOR; ctx.shadowBlur = f(24); }
+    else if (charge > 0) { ctx.shadowColor = '#ffbb33'; ctx.shadowBlur = f(10) + charge / 7; }
+    else ctx.shadowBlur = 0;
+
+    const grad = ctx.createLinearGradient(0, -ROD_HALF_H, 0, ROD_HALF_H);
+    grad.addColorStop(0, '#75757f');
+    grad.addColorStop(0.5, '#35353c');
+    grad.addColorStop(1, '#1c1c20');
+    ctx.fillStyle = grad;
+    roundRect(-ROD_HALF_W, -ROD_HALF_H, rod.width, rod.height, f(11));
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255,224,130,0.55)';
+    ctx.lineWidth = f(1.8);
+    roundRect(-ROD_HALF_W, -ROD_HALF_H, rod.width, rod.height, f(11));
+    ctx.stroke();
+
+    ctx.fillStyle = '#9a9aa2';
+    ctx.font = `bold ${f(13)}px Poppins, Arial`;
+    ctx.textAlign = 'center';
+    ctx.fillText('EBONIT TAYOQCHA', 0, -ROD_HALF_H - f(12));
+    ctx.restore();
+}
+
+function drawChargeSymbols() {
+    const revealed = Math.round((charge / 100) * SYMBOL_COUNT);
+    for (let i = 0; i < revealed; i++) {
+        drawChargeBadge(clothSlots[i].x, clothSlots[i].y, '+');
+        drawChargeBadge(rod.x + rodSlotsLocalX[i], rod.y, '–');
+    }
+}
+
+function drawPapers() {
+    papers.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.attached ? '#fff7e8' : '#ffffff';
+        if (p.attached) { ctx.shadowColor = NEG_COLOR; ctx.shadowBlur = f(7); }
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+
+        if (p.inductionStrength && p.inductionStrength > 0.15) {
+            const ux = p.indUx || 0, uy = p.indUy || 0;
+            ctx.save();
+            ctx.globalAlpha = Math.min(p.inductionStrength, 1);
+            ctx.font = `bold ${f(10)}px Poppins, Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = POS_COLOR;
+            ctx.fillText('+', p.x + ux * f(11), p.y + uy * f(11));
+            ctx.fillStyle = NEG_COLOR;
+            ctx.fillText('–', p.x - ux * f(11), p.y - uy * f(11));
+            ctx.restore();
+        }
+    });
+}
+
+function drawParticles() {
+    particles.forEach(pt => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(pt.life / pt.maxLife, 0);
+        ctx.fillStyle = '#ffcf5b';
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    });
+}
+
+function drawElectrons() {
+    electrons.forEach(e => {
+        const t = e.t, mt = 1 - t;
+        const x = mt * mt * e.x0 + 2 * mt * t * e.cx + t * t * e.x1;
+        const y = mt * mt * e.y0 + 2 * mt * t * e.cy + t * t * e.y1;
+        ctx.save();
+        ctx.globalAlpha = t < 0.85 ? 1 : (1 - t) / 0.15;
+        ctx.beginPath();
+        ctx.arc(x, y, f(6), 0, Math.PI * 2);
+        ctx.fillStyle = NEG_COLOR;
+        ctx.shadowColor = NEG_COLOR;
+        ctx.shadowBlur = f(9);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#0a0a23';
+        ctx.lineWidth = f(1.6);
+        ctx.beginPath();
+        ctx.moveTo(x - f(2.6), y);
+        ctx.lineTo(x + f(2.6), y);
+        ctx.stroke();
+        ctx.restore();
+    });
+}
+
+function drawHint() {
+    if (hasStartedRubbing || charge > 0) return;
+    const pulse = (Math.sin(performance.now() / 300) + 1) / 2;
+    ctx.save();
+    ctx.globalAlpha = 0.25 + pulse * 0.35;
+    ctx.strokeStyle = '#ffe082';
+    ctx.lineWidth = f(2.5);
+    ctx.setLineDash([f(6), f(6)]);
+    roundRect(rod.x - ROD_HALF_W - f(9), rod.y - ROD_HALF_H - f(9), rod.width + f(18), rod.height + f(18), f(14));
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawScene() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawTable();
+    drawBox();
+    drawCloth();
+    drawPapers();
+    drawElectrons();
+    drawRod();
+    drawChargeSymbols();
+    drawParticles();
+    drawHint();
+}
+
+/* ---------- Fizika ---------- */
+function updatePhysics() {
+    let attachedCount = 0;
+    papers.forEach(p => {
+        if (p.attached) {
+            p.x = rod.x + p.attachOffX;
+            p.y = rod.y + p.attachOffY;
+            attachedCount++;
+            p.inductionStrength = 1;
+            return;
+        }
+        if (rod.charged) {
+            const tx = Math.max(rod.x - ROD_HALF_W, Math.min(rod.x + ROD_HALF_W, p.x));
+            const ty = rod.y;
+            const dx = tx - p.x, dy = ty - p.y;
+            const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+
+            if (dist < ATTRACT_RANGE) {
+                const strength = (1 - dist / ATTRACT_RANGE);
+                p.vx += (dx / dist) * strength * ACCEL;
+                p.vy += (dy / dist) * strength * ACCEL;
+                p.inductionStrength = strength;
+                p.indUx = dx / dist; p.indUy = dy / dist;
+
+                if (!inductionExplainShown && strength > 0.3) {
+                    inductionExplainShown = true;
+                    showCallout(
+                        "Qog'oz ichida musbat va manfiy zarrachalar boshidanoq bor edi — teng va aralash holda, shuning uchun 'zaryadsiz' ko'rinardi. Tayoqcha yaqinlashgach, bu zarrachalar joy almashtiradi: musbat zarrachalar tayoqchaga yaqin tomonga, manfiy zarrachalar uzoq tomonga to'planadi. Yaqin tomon <b>(+)</b> kuchliroq tortiladi."
+                    );
+                    instructionEl.textContent = "💡 Qog'oz ichidagi zarrachalar joy almashtirdi (yaqin tomon +, uzoq tomon –) — shuning uchun tortildi.";
+                }
+            } else {
+                p.vx += (p.baseX - p.x) * RETURN_FACTOR;
+                p.vy += (p.baseY - p.y) * RETURN_FACTOR;
+                p.inductionStrength = 0;
+            }
+            if (dist < ATTACH_DIST) {
+                p.attached = true;
+                p.attachOffX = p.x - rod.x;
+                p.attachOffY = p.y - rod.y;
+                playPopSound();
+            }
+        } else {
+            p.vx += (p.baseX - p.x) * RETURN_FACTOR;
+            p.vy += (p.baseY - p.y) * RETURN_FACTOR;
+            p.inductionStrength = 0;
+        }
+        p.vx *= DAMPING; p.vy *= DAMPING;
+        p.x += p.vx; p.y += p.vy;
+    });
+
+    particles.forEach(pt => { pt.x += pt.vx; pt.y += pt.vy; pt.life -= 1; });
+    particles = particles.filter(pt => pt.life > 0);
+
+    electrons.forEach(e => { e.t += 1 / e.duration; });
+    electrons = electrons.filter(e => e.t < 1);
+
+    if (attachedCount === papers.length && attachedCount > 0 && !allAttachedAnnounced) {
+        allAttachedAnnounced = true;
+        instructionEl.textContent = "✅ Ajoyib! Barcha qog'ozlar tortildi. Qayta sinash uchun \"Qayta boshlash\"ni bosing.";
+    }
+}
+
+function loop() {
+    updatePhysics();
+    drawScene();
+    requestAnimationFrame(loop);
+}
+
+/* ---------- Zaryad, uchqun, elektron ---------- */
+function spawnSparks(x, y) {
+    for (let i = 0; i < 3; i++) {
+        particles.push({
+            x: x + (Math.random() * f(22) - f(11)), y: y + (Math.random() * f(12) - f(6)),
+            vx: (Math.random() * 1.5 - 0.75) * S, vy: (-0.6 - Math.random() * 0.9) * S,
+            size: f(1.5) + Math.random() * f(1.8), life: 20 + Math.random() * 10, maxLife: 30
+        });
+    }
+}
+function spawnElectron() {
+    if (electrons.length > 20) return;
+    const x0 = cloth.x + cloth.width * 0.06 + Math.random() * (cloth.width * 0.88);
+    const y0 = cloth.y;
+    const x1 = rod.x + (Math.random() * rod.width * 0.6 - rod.width * 0.3);
+    const y1 = rod.y + ROD_HALF_H;
+    electrons.push({ x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: Math.min(y0, y1) - f(42), t: 0, duration: 16 + Math.random() * 6 });
+}
+
+function addCharge(amount) {
+    if (rod.charged) return;
+    charge = Math.min(100, charge + amount);
+    chargeFillEl.style.width = charge + '%';
+    chargeTextEl.textContent = Math.round(charge) + '%';
+    if (charge >= 100 && !rod.charged) {
+        rod.charged = true;
+        chargeFillEl.classList.add('full');
+        playChargedChime();
+        instructionEl.textContent = "⚡ Tayoqcha manfiy (–), mato musbat (+) zaryadga ega bo'ldi! Endi tayoqchani qutidagi qog'ozlarga yaqinlashtiring.";
+    }
+}
+
+/* ---------- Pointer boshqaruvi ---------- */
+function getPointerPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+}
+function isOverRod(pos) {
+    const pad = f(18);
+    return pos.x > rod.x - ROD_HALF_W - pad && pos.x < rod.x + ROD_HALF_W + pad &&
+           pos.y > rod.y - ROD_HALF_H - pad && pos.y < rod.y + ROD_HALF_H + pad;
+}
+function isNearCloth(x, y) {
+    const padX = cloth.width * 0.14, padY = cloth.height * 1.4;
+    return x > cloth.x - padX && x < cloth.x + cloth.width + padX &&
+           y > cloth.y - padY && y < cloth.y + cloth.height + padY;
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+    initAudio();
+    const pos = getPointerPos(e);
+    if (isOverRod(pos)) {
+        isDragging = true;
+        dragDX = pos.x - rod.x;
+        dragDY = pos.y - rod.y;
+        lastPointer = pos;
+        canvas.classList.add('dragging');
+        canvas.setPointerCapture(e.pointerId);
+        hasStartedRubbing = true;
+    }
+});
+canvas.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    const pos = getPointerPos(e);
+    const newX = Math.max(rod.width / 2, Math.min(canvas.width - rod.width / 2, pos.x - dragDX));
+    const newY = Math.max(rod.height / 2, Math.min(canvas.height * 0.87 - rod.height / 2, pos.y - dragDY));
+
+    if (!rod.charged) {
+        const movedDist = Math.abs(pos.x - lastPointer.x) + Math.abs(pos.y - lastPointer.y);
+        if (isNearCloth(newX, newY) && movedDist > 1) {
+            const amount = (movedDist / CHARGE_FOR_100) * 100;
+            addCharge(amount);
+            spawnSparks(newX, newY + ROD_HALF_H);
+            if (Math.random() < 0.5) spawnElectron();
+            playFrictionSound();
+            instructionEl.textContent = "Ishqalashda davom eting... (" + Math.round(charge) + "%)";
+        }
+    }
+    rod.x = newX; rod.y = newY;
+    lastPointer = pos;
+});
+function stopDrag() {
+    if (!isDragging) return;
+    isDragging = false;
+    canvas.classList.remove('dragging');
+    if (rod.charged) instructionEl.textContent = "Tayoqchani qutiga yanada yaqinlashtiring — qog'ozlar tortiladi!";
+}
+canvas.addEventListener('pointerup', stopDrag);
+canvas.addEventListener('pointercancel', stopDrag);
+canvas.addEventListener('pointerleave', stopDrag);
+
+/* ---------- Reset / Modal ---------- */
+function resetSimulation() {
+    hasStartedRubbing = false;
+    allAttachedAnnounced = false;
+    inductionExplainShown = false;
+    closeCallout();
+    recomputeLayout();
+    instructionEl.textContent = "1-bosqich: Ebonit tayoqchani ushlab, jun mato ustida suring 👆 — ebonit elektronni junga qaraganda kuchliroq tortadi, shuning uchun elektronlar mato'dan tayoqchaga o'tadi.";
+}
+
+function openInfoModal() { document.getElementById('infoModal').style.display = 'flex'; }
+function closeInfoModal() { document.getElementById('infoModal').style.display = 'none'; }
+window.onclick = function (event) {
+    const modal = document.getElementById('infoModal');
+    if (event.target === modal) modal.style.display = 'none';
+};
+
+/* ---------- Ishga tushirish ---------- */
+resizeCanvas();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
